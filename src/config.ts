@@ -10,7 +10,7 @@ export default {
   // 网站作者
   Author: 'comegender',
   // 作者头像
-  Avatar: 'public\\assets\\images\\avater\\20211212103940_5268d.jpeg',
+  Avatar: 'assets\\images\\avater\\20211212103940_5268d.jpeg',
   // 网站座右铭
   Motto: '运气是计划之外的东西.',
   // Cover 网站缩略图
