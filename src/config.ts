@@ -4,15 +4,15 @@ export default {
   // 网站地址
   Site: 'https://www.comgender.cn',
   // 网站副标题
-  Subtitle: '.comgender',
+  Subtitle: '.comgender-blog',
   // 网站描述
-  Description: 'comegender博客 专注于学习与技术的分享。同时，博客也分享作者的生活、音乐和旅行的热爱。',
+  Description: 'comegender博客 专注于学习与技术的分享。同时，博客也分享作者的学习生活与感想。',
   // 网站作者
   Author: 'comegender',
   // 作者头像
   Avatar: 'assets\\images\\avater\\20211212103940_5268d.jpeg',
   // 网站座右铭
-  Motto: '运气是计划之外的东西.',
+  Motto: '孩儿立志出乡关，立不成名誓不还.',
   // Cover 网站缩略图
   Cover: '/assets/images/banner/072c12ec85d2d3b5.webp',
   // 网站侧边栏公告 (不填写即不开启)
