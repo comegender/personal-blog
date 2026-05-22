@@ -7,7 +7,7 @@ tags:
   - 学习笔记
 id: "CS231n_c1"
 date: 2026-05-22 23:21:07
-cover: "/public/assets/images/cs231n.png"
+cover: "/assets/images/cs231n.png"
 recommend: true
 ---
 
