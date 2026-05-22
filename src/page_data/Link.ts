@@ -6,7 +6,7 @@ export default {
     {
       "name": "Abe",
       "link": "https://baiyunabe.github.io",
-      "avatar": "assets\\images\\avater\\微信图片_2026-05-22_195247_849.jpg",
+      "avatar": "assets\\images\\avater\\abe.jpg",
       "descr": "传奇舍友Abe."
     }
   ]
