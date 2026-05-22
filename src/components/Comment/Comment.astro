@@ -1,5 +1,10 @@
 ---
+const { placeholder } = Astro.props;
 import "./Comment.less";
 ---
 
-<section class="vh-comment"><section><section class="vh-space-loading"><span></span><span></span><span></span></section></section></section>
+<section class="vh-comment" data-placeholder={placeholder}>
+  <section>
+    <section class="vh-space-loading"><span></span><span></span><span></span></section>
+  </section>
+</section>

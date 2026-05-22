@@ -85,6 +85,6 @@ import "@/styles/ArticleBase.less";
 			<!-- 底部谷歌广告 -->
 			{GoogleAds.ad_Client && GoogleAds.articleAD_Slot && <GoogleAd className="vh-article-ad" slotID={GoogleAds.articleAD_Slot} />}
 		</footer>
-		{checkComment() && <Comment />}
+		{checkComment() && <Comment placeholder={post.data.commentPlaceholder || '你觉得这篇文章怎么样'} />}
 	</article>
 </Layout>

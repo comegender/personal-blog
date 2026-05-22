@@ -19,11 +19,18 @@ const TwikooFn = async (commentDOM: string) => {
 
 // Waline 评论
 const WalineFn = async (commentDOM: string, walineInit: any) => {
-  import('@waline/client/waline.css');
-  import('@waline/client/waline-meta.css');
-  const { init } = await import('@waline/client');
+  // 加载 Waline CSS
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'https://unpkg.com/@waline/client@v3/dist/waline.css';
+  document.head.appendChild(link);
+  const walineUrl = 'https://unpkg.com/@waline/client@v3/dist/waline.js';
+  // @ts-ignore - CDN 动态导入
+  const { init } = await import(walineUrl);
+  const placeholder = document.querySelector('.vh-comment')?.getAttribute('data-placeholder') || '';
   walineInit = init({
     el: commentDOM, path: window.location.pathname.replace(/\/$/, ''), serverURL: SITE_INFO.Comment.Waline.serverURL,
+    locale: { reactionTitle: placeholder },
     emoji: ['https://registry.npmmirror.com/@waline/emojis/1.3.0/files/alus', 'https://registry.npmmirror.com/@waline/emojis/1.3.0/files/bilibili', 'https://registry.npmmirror.com/@waline/emojis/1.3.0/files/bmoji', 'https://registry.npmmirror.com/@waline/emojis/1.3.0/files/qq', 'https://registry.npmmirror.com/@waline/emojis/1.3.0/files/tieba', 'https://registry.npmmirror.com/@waline/emojis/1.3.0/files/weibo', 'https://registry.npmmirror.com/@waline/emojis/1.3.0/files/soul-emoji'],
     reaction: [
       "https://registry.npmmirror.com/@waline/emojis/1.3.0/files/tieba/tieba_agree.png",
@@ -42,6 +49,16 @@ const WalineFn = async (commentDOM: string, walineInit: any) => {
       return resJson.data.link.replace('i.imgur.com', 'wp-cdn.4ce.cn/v2');
     }
   });
+  // DOM 兜底：修改反应标题文字
+  if (placeholder) {
+    const setPH = () => {
+      const rt = document.querySelector('.wl-reaction-title') as HTMLElement;
+      if (rt) rt.textContent = placeholder;
+    };
+    setTimeout(setPH, 300);
+    setTimeout(setPH, 800);
+    setTimeout(setPH, 1500);
+  }
 }
 
 // 检查是否开启评论

@@ -4,6 +4,7 @@ h1: "朋友圈 👭"
 desc: "天下快意之事莫若友。"
 layout: "@/layouts/ToolLayout/ToolLayout.astro"
 type: "links"
+placeholder: "来和我交个朋友吧！"
 ---
 
 :::note{type="success"}

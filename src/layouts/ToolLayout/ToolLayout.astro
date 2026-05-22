@@ -22,6 +22,6 @@ import "@/styles/ArticleBase.less";
 		</header>
 		<main><slot /></main>
 		<main class={`${frontmatter.type}-main main`}><section class="vh-space-loading"><span></span><span></span><span></span></section></main>
-		{checkComment() && frontmatter.comment != false && <Comment />}
+		{checkComment() && frontmatter.comment != false && <Comment placeholder={frontmatter.placeholder || '你觉得这篇文章怎么样'} />}
 	</section>
 </Layout>

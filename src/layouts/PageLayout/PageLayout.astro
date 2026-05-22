@@ -23,6 +23,6 @@ import "./PageLayout.less";
 			<p>{frontmatter.desc}</p>
 		</header>
 		<main><slot /></main>
-		{checkComment() && frontmatter.comment != false && <Comment />}
+		{checkComment() && frontmatter.comment != false && <Comment placeholder={frontmatter.placeholder || '你觉得这篇文章怎么样'} />}
 	</section>
 </Layout>

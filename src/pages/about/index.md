@@ -4,6 +4,7 @@ h1: "关于我"
 desc: "Hi there, I’m comegender 👋"
 layout: "@/layouts/PageLayout/PageLayout.astro"
 type: "about"
+placeholder: "想对我说些什么呢？"
 ---
 
 :::note{type="success"}
