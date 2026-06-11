@@ -20,6 +20,8 @@ const CountInfo = getCountInfo();
 const recommendArticles = getRecommendArticles();
 // Google 广告组件
 import GoogleAd from "@/components/GoogleAd/GoogleAd.astro";
+// 目录组件
+import Toc from "@/components/Toc/Toc.astro";
 // 侧边栏样式
 import "./Aside.less";
 ---
@@ -113,6 +115,8 @@ import "./Aside.less";
 	}
 
 	<section class="sticky-aside">
+		<!-- 文章目录 -->
+		<Toc />
 		<!-- 最新文章块 -->
 		{
 			recommendArticles.length && AsideShow.recommendArticleShow && (

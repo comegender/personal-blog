@@ -1,0 +1,46 @@
+---
+import "./Toc.less";
+---
+
+<nav class="vh-toc hidden" id="vh-toc">
+  <h3 class="vh-toc-title">目录</h3>
+  <ul class="vh-toc-list" id="vh-toc-list"></ul>
+</nav>
+
+<script>
+  import { inRouter } from "@/utils/updateRouter";
+
+  function buildToc() {
+    const tocNav = document.getElementById('vh-toc');
+    const tocList = document.getElementById('vh-toc-list');
+    if (!tocNav || !tocList) return;
+
+    const article = document.querySelector('.vh-article-main');
+    const headings = article ? article.querySelectorAll('h2, h3') : [];
+    if (headings.length === 0) {
+      tocNav.classList.add('hidden');
+      return;
+    }
+
+    tocNav.classList.remove('hidden');
+    tocList.innerHTML = '';
+
+    headings.forEach((h) => {
+      const li = document.createElement('li');
+      li.className = `vh-toc-item vh-toc-depth-${h.tagName === 'H3' ? '3' : '2'}`;
+      const a = document.createElement('a');
+      a.href = `#${h.id}`;
+      a.textContent = h.textContent;
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        h.scrollIntoView({ behavior: 'smooth' });
+        history.replaceState(null, '', `#${h.id}`);
+      });
+      li.appendChild(a);
+      tocList.appendChild(li);
+    });
+  }
+
+  inRouter(() => buildToc());
+  setTimeout(buildToc, 0);
+</script>
