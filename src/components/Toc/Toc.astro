@@ -10,37 +10,241 @@ import "./Toc.less";
 <script>
   import { inRouter } from "@/utils/updateRouter";
 
+  const TOC_SCROLL_OFFSET = 88;
+  let tocPositionFrame = 0;
+  let tocHighlightFrame = 0;
+  let tocScrollHandler = null;
+  let activeHeadingId = '';
+
+  function updateTocPosition() {
+    if (tocPositionFrame) return;
+    tocPositionFrame = requestAnimationFrame(function () {
+      tocPositionFrame = 0;
+
+      const tocNav = document.getElementById('vh-toc');
+      const asideFirstItem = document.querySelector('.vh-aside > .vh-aside-item, .vh-aside > .sticky-aside');
+      if (!tocNav || !asideFirstItem) return;
+
+      const asideTop = asideFirstItem.getBoundingClientRect().top;
+      const top = Math.max(TOC_SCROLL_OFFSET, asideTop);
+      tocNav.style.setProperty('--vh-toc-top', top + 'px');
+      tocNav.style.setProperty('--vh-toc-max-height', Math.max(160, window.innerHeight - top - 16) + 'px');
+    });
+  }
+
+  function scrollToHeading(el, behavior) {
+    const top = el.getBoundingClientRect().top + window.scrollY - TOC_SCROLL_OFFSET;
+    window.scrollTo({
+      top: Math.max(0, top),
+      behavior: behavior || 'smooth'
+    });
+  }
+
+  function findTocLink(tocList, headingId) {
+    const links = Array.from(tocList.querySelectorAll('a[data-heading-id]'));
+    return links.find(function (item) { return item.getAttribute('data-heading-id') === headingId; });
+  }
+
+  function resetTocExpansion(tocList) {
+    tocList.querySelectorAll('.vh-toc-children').forEach(function (el) {
+      el.style.display = 'none';
+    });
+
+    tocList.querySelectorAll('.vh-toc-toggle').forEach(function (el) {
+      if (el.parentElement && el.parentElement.parentElement && el.parentElement.parentElement.querySelector(':scope > .vh-toc-children')) {
+        el.textContent = '+';
+      }
+    });
+  }
+
+  function expandTocItem(li) {
+    const childUl = li.querySelector(':scope > .vh-toc-children');
+    if (!childUl) return;
+
+    childUl.style.display = '';
+    const toggle = li.querySelector(':scope > .vh-toc-row .vh-toc-toggle');
+    if (toggle) toggle.textContent = '-';
+  }
+
+  function setActiveTocItem(tocList, headingId) {
+    if (!headingId) return;
+    const link = findTocLink(tocList, headingId);
+    if (!link) return;
+
+    activeHeadingId = headingId;
+    resetTocExpansion(tocList);
+    tocList.querySelectorAll('.vh-toc-item').forEach(function (el) { el.classList.remove('active'); });
+
+    const li = link.closest('.vh-toc-item');
+    if (!li) return;
+
+    li.classList.add('active');
+    expandTocItem(li);
+
+    let parent = li.parentElement;
+    while (parent) {
+      if (parent.classList.contains('vh-toc-children')) {
+        parent.style.display = '';
+        const parentLi = parent.closest('.vh-toc-item');
+        if (parentLi) {
+          parentLi.classList.add('active');
+          expandTocItem(parentLi);
+        }
+      }
+      parent = parent.parentElement;
+    }
+  }
+
+  function updateActiveHeading(headings, tocList) {
+    if (tocHighlightFrame) return;
+    tocHighlightFrame = requestAnimationFrame(function () {
+      tocHighlightFrame = 0;
+      if (!headings.length) return;
+
+      let activeHeading = headings[0];
+      const checkpoint = TOC_SCROLL_OFFSET + 1;
+
+      for (let i = 0; i < headings.length; i++) {
+        if (headings[i].getBoundingClientRect().top <= checkpoint) {
+          activeHeading = headings[i];
+        } else {
+          break;
+        }
+      }
+
+      if (activeHeading.id !== activeHeadingId) {
+        setActiveTocItem(tocList, activeHeading.id);
+      }
+    });
+  }
+
+  function buildHeadingTree(headings) {
+    const sections = [];
+    const stack = [];
+
+    headings.forEach(function (h) {
+      const level = parseInt(h.tagName[1]);
+      const item = { el: h, level: level, children: [] };
+      while (stack.length && stack[stack.length - 1].level >= level) stack.pop();
+      if (stack.length === 0) {
+        sections.push(item);
+      } else {
+        stack[stack.length - 1].children.push(item);
+      }
+      stack.push(item);
+    });
+
+    return sections;
+  }
+
   function buildToc() {
     const tocNav = document.getElementById('vh-toc');
     const tocList = document.getElementById('vh-toc-list');
     if (!tocNav || !tocList) return;
 
+    if (tocScrollHandler) {
+      window.removeEventListener('scroll', tocScrollHandler);
+      window.removeEventListener('resize', tocScrollHandler);
+      tocScrollHandler = null;
+    }
+
     const article = document.querySelector('.vh-article-main');
-    const headings = article ? article.querySelectorAll('h2, h3') : [];
-    if (headings.length === 0) {
+    const main = article ? article.querySelector('main') : null;
+    const allHeadings = main ? Array.from(main.querySelectorAll('h1[id], h2[id], h3[id]')) : [];
+    if (allHeadings.length === 0) {
       tocNav.classList.add('hidden');
+      tocList.innerHTML = '';
       return;
     }
 
     tocNav.classList.remove('hidden');
     tocList.innerHTML = '';
+    activeHeadingId = '';
+    updateTocPosition();
 
-    headings.forEach((h) => {
-      const li = document.createElement('li');
-      li.className = `vh-toc-item vh-toc-depth-${h.tagName === 'H3' ? '3' : '2'}`;
-      const a = document.createElement('a');
-      a.href = `#${h.id}`;
-      a.textContent = h.textContent;
-      a.addEventListener('click', (e) => {
-        e.preventDefault();
-        h.scrollIntoView({ behavior: 'smooth' });
-        history.replaceState(null, '', `#${h.id}`);
-      });
-      li.appendChild(a);
-      tocList.appendChild(li);
-    });
+    function renderItems(parent, items, depth) {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const headingId = item.el.id;
+        const li = document.createElement('li');
+        li.className = 'vh-toc-item vh-toc-depth-' + depth;
+
+        const row = document.createElement('div');
+        row.className = 'vh-toc-row';
+
+        const toggle = document.createElement('span');
+        toggle.className = 'vh-toc-toggle';
+        if (item.children.length > 0) {
+          toggle.textContent = '+';
+          toggle.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const childUl = li.querySelector(':scope > ul');
+            if (!childUl) return;
+            const isOpen = childUl.style.display !== 'none';
+            childUl.style.display = isOpen ? 'none' : '';
+            toggle.textContent = isOpen ? '+' : '-';
+          });
+        }
+
+        const a = document.createElement('a');
+        a.href = '#' + headingId;
+        a.textContent = item.el.textContent;
+        a.setAttribute('data-no-swup', '');
+        a.setAttribute('data-heading-id', headingId);
+        a.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+
+          const el = document.getElementById(headingId);
+          if (!el) return;
+
+          history.pushState(null, '', '#' + encodeURIComponent(headingId));
+          setActiveTocItem(tocList, headingId);
+          scrollToHeading(el, 'smooth');
+        });
+
+        row.appendChild(toggle);
+        row.appendChild(a);
+        li.appendChild(row);
+
+        if (item.children.length > 0) {
+          const childUl = document.createElement('ul');
+          childUl.className = 'vh-toc-children';
+          childUl.style.display = 'none';
+          renderItems(childUl, item.children, depth + 1);
+          li.appendChild(childUl);
+        }
+
+        parent.appendChild(li);
+      }
+    }
+
+    renderItems(tocList, buildHeadingTree(allHeadings), 0);
+
+    tocScrollHandler = function () {
+      updateTocPosition();
+      updateActiveHeading(allHeadings, tocList);
+    };
+    window.addEventListener('scroll', tocScrollHandler, { passive: true });
+    window.addEventListener('resize', tocScrollHandler);
+    updateActiveHeading(allHeadings, tocList);
+
+    if (location.hash) {
+      const targetId = decodeURIComponent(location.hash.slice(1));
+      const target = document.getElementById(targetId);
+      if (target && main.contains(target)) {
+        setTimeout(function () {
+          setActiveTocItem(tocList, targetId);
+          scrollToHeading(target, 'auto');
+        }, 50);
+      }
+    }
   }
 
-  inRouter(() => buildToc());
+  inRouter(function () { buildToc(); });
+  window.removeEventListener('scroll', updateTocPosition);
+  window.removeEventListener('resize', updateTocPosition);
+  window.addEventListener('scroll', updateTocPosition, { passive: true });
+  window.addEventListener('resize', updateTocPosition);
   setTimeout(buildToc, 0);
 </script>
